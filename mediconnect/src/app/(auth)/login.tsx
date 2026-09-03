@@ -8,6 +8,7 @@ import {
   ScrollView,
   ActivityIndicator,
   Modal,
+  Image,
 } from 'react-native';
 import { router } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
@@ -101,8 +102,8 @@ export default function UniversalLoginScreen() {
       {/* Top Emergency SOS Banner */}
       <View style={styles.emergencyBanner}>
         <View style={styles.emergencyBannerLeft}>
-          <Ionicons name="alert-circle" size={20} color="#DC2626" />
-          <Text style={styles.emergencyBannerText}>In an immediate life-threatening emergency?</Text>
+          <Ionicons name="shield-checkmark" size={16} color="#DC2626" />
+          <Text style={styles.emergencyBannerText}>MediConnect Emergency Network: Live & Operational</Text>
         </View>
         <TouchableOpacity
           style={styles.emergencyBannerBtn}
@@ -115,10 +116,12 @@ export default function UniversalLoginScreen() {
       <View style={styles.loginCard}>
         {/* Brand Header */}
         <View style={styles.headerArea}>
-          <View style={styles.logoBadge}>
-            <Ionicons name="medical" size={28} color="#FFFFFF" />
-          </View>
-          <Text style={styles.brandTitle}>HealthConnect</Text>
+          <Image
+            source={require('../../../assets/images/app_logo.png')}
+            style={styles.logoImage}
+            resizeMode="contain"
+          />
+          <Text style={styles.brandTitle}>MediConnect</Text>
           <Text style={styles.brandSubtitle}>Healthcare & Emergency Response Platform</Text>
           <Text style={styles.universalNotice}>
             Universal Portal for Patients, Doctors, Hospitals, Ambulances & Responders
@@ -482,13 +485,9 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginBottom: 20,
   },
-  logoBadge: {
-    width: 52,
-    height: 52,
-    borderRadius: 12,
-    backgroundColor: HealthcareColors.emergencyRed,
-    alignItems: 'center',
-    justifyContent: 'center',
+  logoImage: {
+    width: 56,
+    height: 56,
     marginBottom: 10,
   },
   brandTitle: {

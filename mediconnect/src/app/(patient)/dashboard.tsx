@@ -8,10 +8,12 @@ import {
   Modal,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import QRCode from 'react-native-qrcode-svg';
 import { useAuth } from '@/context/AuthContext';
 import { DashboardHeader } from '@/components/DashboardHeader';
 import { PatientProfileData } from '@/types/auth';
 import { HealthcareColors } from '@/constants/theme';
+import { buildPatientQrPayload } from '@/services/qrCodeService';
 
 export default function PatientDashboard() {
   const { user, profile, triggerEmergencySos } = useAuth();
@@ -367,16 +369,34 @@ export default function PatientDashboard() {
         {/* ================= VIEW 4: MEDICAL QR PASS ================= */}
         {activeTab === 'medical_pass' && (
           <View style={styles.sectionArea}>
-            <Text style={styles.sectionTitle}>Emergency Digital Medical Pass</Text>
+            <Text style={styles.sectionTitle}>Permanent Digital Medical Pass</Text>
             <Text style={styles.sectionSubtitle}>
-              Lock-screen ready medical credentials readable by first-responders and ER casualty staff.
+              Your unique QR pass automatically resolves your live updated emergency profile when scanned.
             </Text>
 
             <View style={styles.qrCard}>
               <View style={styles.qrVisualBox}>
-                <Ionicons name="qr-code" size={140} color="#0F172A" />
+                {user && patientProfile ? (
+                  <View style={styles.qrContainerBox}>
+                    <QRCode
+                      value={JSON.stringify(buildPatientQrPayload(user, patientProfile))}
+                      size={170}
+                      color="#0F172A"
+                      backgroundColor="#FFFFFF"
+                    />
+                  </View>
+                ) : (
+                  <Ionicons name="qr-code" size={140} color="#0F172A" />
+                )}
                 <Text style={styles.qrTokenText}>
-                  PASS ID: {patientProfile?.qrPassToken || 'QR-MED-98765-ALPHA'}
+                  UNIQUE PASS TOKEN: {patientProfile?.qrPassToken || 'qr_med_rahul_98765'}
+                </Text>
+              </View>
+
+              <View style={styles.uniqueQrNoticeBox}>
+                <Ionicons name="infinite" size={18} color="#0284C7" />
+                <Text style={styles.uniqueQrNoticeText}>
+                  <Text style={{ fontWeight: '800' }}>Single Persistent QR Pass:</Text> Even if you update your phone number, emergency contacts, or allergies in your profile, this exact same QR code will always display your <Text style={{ fontWeight: '800' }}>latest live records</Text> to doctors and first-responders.
                 </Text>
               </View>
 
@@ -895,6 +915,15 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: '#E2E8F0',
   },
+  qrContainerBox: {
+    padding: 12,
+    backgroundColor: '#FFFFFF',
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: '#E2E8F0',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
   qrTokenText: {
     fontSize: 11,
     fontWeight: '700',
@@ -1146,5 +1175,22 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: '700',
     color: '#475569',
+  },
+  uniqueQrNoticeBox: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    gap: 10,
+    backgroundColor: '#F0F9FF',
+    borderColor: '#BAE6FD',
+    borderWidth: 1,
+    padding: 12,
+    borderRadius: 12,
+    width: '100%',
+  },
+  uniqueQrNoticeText: {
+    fontSize: 12,
+    color: '#0369A1',
+    flex: 1,
+    lineHeight: 18,
   },
 });
