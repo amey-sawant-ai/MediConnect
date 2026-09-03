@@ -11,6 +11,7 @@ import { useAuth } from '@/context/AuthContext';
 import { DashboardHeader } from '@/components/DashboardHeader';
 import { AmbulanceProfileData, AmbulanceStatus } from '@/types/auth';
 import { HealthcareColors } from '@/constants/theme';
+import { InteractiveEmergencyMap } from '@/components/InteractiveEmergencyMap';
 
 export default function AmbulanceDashboard() {
   const { user, profile } = useAuth();
@@ -119,6 +120,13 @@ export default function AmbulanceDashboard() {
                 History: Mild Asthma • Rescue Inhaler with patient
               </Text>
             </View>
+
+            {/* Live Navigation & Telemetry Map */}
+            <InteractiveEmergencyMap
+              patientName="Rahul Sharma (Patient)"
+              hospitalName="Metro City Trauma Hospital"
+              ambulanceName={ambProfile?.ambulanceIdNumber || 'Rapid ALS Unit 07'}
+            />
 
             {/* Step Progress Tracker */}
             <View style={styles.phaseSteps}>

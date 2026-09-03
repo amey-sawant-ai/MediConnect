@@ -11,6 +11,7 @@ import { useAuth } from '@/context/AuthContext';
 import { DashboardHeader } from '@/components/DashboardHeader';
 import { PatientProfileData } from '@/types/auth';
 import { HealthcareColors } from '@/constants/theme';
+import { InteractiveEmergencyMap } from '@/components/InteractiveEmergencyMap';
 
 export default function PatientDashboard() {
   const { user, profile } = useAuth();
@@ -168,6 +169,13 @@ export default function PatientDashboard() {
                 </View>
               )}
             </View>
+
+            {/* Live Interactive Emergency Dispatch Map */}
+            <InteractiveEmergencyMap
+              patientName={user?.fullName || 'Rahul Sharma (Patient)'}
+              hospitalName="Metro City Trauma Hospital"
+              ambulanceName="Rapid ALS Unit 07"
+            />
 
             {/* Quick Access Matrix */}
             <Text style={styles.sectionTitle}>Nearest Emergency Facilities</Text>
