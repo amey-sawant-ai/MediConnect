@@ -22,7 +22,7 @@ HealthConnect uses a **Single Unified Authentication Gate** paired with **Role-B
              \                 /                                |
               v               v                  +--------------+--------------+
            [ Central Authenticate ]              | (Patient, Doctor, Hospital, |
-                      |                          |  Ambulance, BloodBank, EMT) |
+                      |                          |  Ambulance, BloodBank)      |
                [ Resolve Role ]                  +--------------+--------------+
                       |                                         |
      +----------------+----------------+                        v
@@ -32,7 +32,6 @@ HealthConnect uses a **Single Unified Authentication Gate** paired with **Role-B
      | - /hospital/dashboard           |                        v
      | - /ambulance/dashboard          |              [ Create Auth + Profile ]
      | - /blood-bank/dashboard         |                        |
-     | - /responder/dashboard          |                        v
      | - /admin/dashboard              |              [ Route to Dashboard     ]
      +---------------------------------+
 ```
@@ -55,7 +54,6 @@ HealthConnect uses a **Single Unified Authentication Gate** paired with **Role-B
 | `hospital` | Hospital / Clinic | Yes | Yes (License & Facility Review) | `/(hospital)/dashboard` | Bed/ICU availability management, ER intake coordination. |
 | `ambulance` | Ambulance Service | Yes | Yes (Permit & Fleet Review) | `/(ambulance)/dashboard` | Real-time GPS beaconing, dispatch reception, paramedic telemetry. |
 | `blood_bank`| Blood Bank Hub | Yes | Yes (Regulatory License) | `/(blood-bank)/dashboard`| Blood & platelet inventory management, emergency broadcast response. |
-| `responder` | Emergency First Responder | Yes | Yes (EMT/Paramedic Badge) | `/(responder)/dashboard` | On-scene triage, AED location beacon, emergency stabilization. |
 | `admin` | System Administrator | **NO** | Pre-approved | `/(admin)/dashboard` | Audit logs, platform telemetry, verification approvals, system config. |
 
 ---
@@ -71,7 +69,6 @@ CREATE TYPE user_role AS ENUM (
     'hospital',
     'ambulance',
     'blood_bank',
-    'responder',
     'admin'
 );
 
@@ -232,24 +229,6 @@ CREATE TABLE blood_bank_profiles (
 );
 ```
 
-#### 6. `responder_profiles`
-```sql
-CREATE TABLE responder_profiles (
-    user_id UUID PRIMARY KEY REFERENCES users(id) ON DELETE CASCADE,
-    badge_or_responder_id VARCHAR(100) UNIQUE NOT NULL,
-    organization_name VARCHAR(150) NOT NULL,
-    responder_role VARCHAR(100) NOT NULL, -- 'Paramedic', 'Firefighter EMT', 'Disaster Relief Medic'
-    certifications TEXT[] NOT NULL, -- ['ACLS', 'BLS', 'PHTLS']
-    current_latitude DOUBLE PRECISION,
-    current_longitude DOUBLE PRECISION,
-    is_on_duty BOOLEAN DEFAULT TRUE,
-    emergency_contact_phone VARCHAR(20) NOT NULL,
-    verification_document_url TEXT NOT NULL,
-    is_verified BOOLEAN DEFAULT FALSE,
-    updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
-);
-```
-
 ---
 
 ## 4. TypeScript Type Contracts (for Client & Server Code)
@@ -264,7 +243,6 @@ export type UserRole =
   | 'hospital'
   | 'ambulance'
   | 'blood_bank'
-  | 'responder'
   | 'admin';
 
 export type UserStatus = 'active' | 'pending_verification' | 'suspended' | 'deactivated';
@@ -402,15 +380,6 @@ export interface BloodBankProfileData {
   operatingHours: string;
   verificationDocumentUrl: string;
 }
-
-export interface ResponderProfileData {
-  badgeOrResponderId: string;
-  organizationName: string;
-  responderRole: string;
-  certifications: string[];
-  emergencyContactPhone: string;
-  verificationDocumentUrl: string;
-}
 ```
 
 ---
@@ -502,8 +471,7 @@ mediconnect/
 │   │           ├── doctor.tsx
 │   │           ├── hospital.tsx
 │   │           ├── ambulance.tsx
-│   │           ├── blood-bank.tsx
-│   │           └── responder.tsx
+│   │           └── blood-bank.tsx
 │   ├── (patient)/               # Role 1: Citizen / Patient
 │   │   ├── _layout.tsx          # Patient Tab Bar (Home, SOS, Beds, Blood, QR)
 │   │   └── dashboard.tsx
@@ -519,10 +487,7 @@ mediconnect/
 │   ├── (blood-bank)/            # Role 5: Blood Bank Manager
 │   │   ├── _layout.tsx
 │   │   └── dashboard.tsx
-│   ├── (responder)/             # Role 6: Field Responder
-│   │   ├── _layout.tsx
-│   │   └── dashboard.tsx
-│   └── (admin)/                 # Role 7: Super Admin
+│   └── (admin)/                 # Role 6: Super Admin
 │       ├── _layout.tsx
 │       └── dashboard.tsx
 └── src/
@@ -556,8 +521,6 @@ export function getDashboardRoute(role: UserRole): string {
       return '/(ambulance)/dashboard';
     case 'blood_bank':
       return '/(blood-bank)/dashboard';
-    case 'responder':
-      return '/(responder)/dashboard';
     case 'admin':
       return '/(admin)/dashboard';
     default:

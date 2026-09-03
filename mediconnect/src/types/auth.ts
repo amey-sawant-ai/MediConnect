@@ -6,9 +6,7 @@ export type UserRole =
   | 'doctor'
   | 'hospital'
   | 'ambulance'
-  | 'blood_bank'
-  | 'responder'
-  | 'admin';
+  | 'blood_bank';
 
 export type UserStatus = 'active' | 'pending_verification' | 'suspended' | 'deactivated';
 
@@ -124,16 +122,6 @@ export interface BloodBankProfileData {
   isVerified: boolean;
 }
 
-export interface ResponderProfileData {
-  badgeOrResponderId: string;
-  organizationName: string;
-  responderRole: string;
-  certifications: string[];
-  emergencyContactPhone: string;
-  isOnDuty: boolean;
-  isVerified: boolean;
-}
-
 // -------------------------------------------------------------
 // Auth Payloads & Responses
 // -------------------------------------------------------------
@@ -154,7 +142,7 @@ export interface BaseRegisterPayload {
   phoneNumber: string;
   email?: string;
   password?: string;
-  role: Exclude<UserRole, 'admin'>;
+  role: UserRole;
 }
 
 export type AnyRoleProfileData =
@@ -162,8 +150,7 @@ export type AnyRoleProfileData =
   | DoctorProfileData
   | HospitalProfileData
   | AmbulanceProfileData
-  | BloodBankProfileData
-  | ResponderProfileData;
+  | BloodBankProfileData;
 
 export interface AuthSession {
   token: string;

@@ -121,7 +121,7 @@ export default function UniversalLoginScreen() {
           <Text style={styles.brandTitle}>HealthConnect</Text>
           <Text style={styles.brandSubtitle}>Healthcare & Emergency Response Platform</Text>
           <Text style={styles.universalNotice}>
-            Universal Portal for Patients, Doctors, Hospitals, Ambulances & Responders
+            Universal Portal for Patients, Doctors, Hospitals, Ambulances & Blood Banks
           </Text>
         </View>
 
@@ -326,8 +326,6 @@ export default function UniversalLoginScreen() {
               { role: 'hospital' as UserRole, label: 'Hospital ER', color: '#0284C7' },
               { role: 'ambulance' as UserRole, label: 'Ambulance', color: '#F59E0B' },
               { role: 'blood_bank' as UserRole, label: 'Blood Bank', color: '#EF4444' },
-              { role: 'responder' as UserRole, label: 'Responder', color: '#DC2626' },
-              { role: 'admin' as UserRole, label: 'Admin', color: '#334155' },
             ].map((p) => (
               <TouchableOpacity
                 key={p.role}

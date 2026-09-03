@@ -6,7 +6,6 @@ import {
   HospitalProfileData,
   AmbulanceProfileData,
   BloodBankProfileData,
-  ResponderProfileData,
   AnyRoleProfileData,
 } from '@/types/auth';
 
@@ -173,56 +172,5 @@ export const MOCK_ACCOUNTS: Record<UserRole, MockAccountRecord> = {
       plasmaAvailable: true,
       isVerified: true,
     } as BloodBankProfileData,
-  },
-
-  responder: {
-    user: {
-      id: 'usr_resp_006',
-      fullName: 'Kavita Deshmukh',
-      email: 'responder@healthconnect.org',
-      phoneNumber: '+91 97777 88990',
-      role: 'responder',
-      status: 'active',
-      avatarUrl: 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=150',
-      createdAt: '2025-09-12T11:00:00Z',
-    },
-    password: 'password123',
-    profile: {
-      badgeOrResponderId: 'EMT-PARAMEDIC-4019',
-      organizationName: 'National Disaster Response & Medical Reserve',
-      responderRole: 'Senior Paramedic / First Responder',
-      certifications: ['Advanced Cardiac Life Support (ACLS)', 'Pre-Hospital Trauma Life Support (PHTLS)', 'Wilderness EMT'],
-      emergencyContactPhone: '+91 97777 88991',
-      isOnDuty: true,
-      isVerified: true,
-    } as ResponderProfileData,
-  },
-
-  admin: {
-    user: {
-      id: 'usr_adm_007',
-      fullName: 'System Administrator (HealthConnect Ops)',
-      email: 'admin@healthconnect.org',
-      phoneNumber: '+91 22 1800 0001',
-      role: 'admin',
-      status: 'active',
-      avatarUrl: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=150',
-      createdAt: '2025-01-01T00:00:00Z',
-    },
-    password: 'password123',
-    profile: {
-      dateOfBirth: '1985-01-01',
-      gender: 'other',
-      bloodGroup: 'O+',
-      allergies: [],
-      existingConditions: [],
-      currentMedications: [],
-      emergencyContact: {
-        name: 'Security Operations Desk',
-        relation: 'Admin Desk',
-        phoneNumber: '+91 22 1800 0001',
-      },
-      qrPassToken: 'qr_adm_root_001',
-    } as PatientProfileData,
   },
 };

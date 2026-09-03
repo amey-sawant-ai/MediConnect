@@ -12,10 +12,6 @@ export function getDashboardRoute(role: UserRole): string {
       return '/(ambulance)/dashboard';
     case 'blood_bank':
       return '/(blood-bank)/dashboard';
-    case 'responder':
-      return '/(responder)/dashboard';
-    case 'admin':
-      return '/(admin)/dashboard';
     default:
       return '/(auth)/login';
   }
@@ -33,10 +29,6 @@ export function getRoleBadgeDetails(role: UserRole): { label: string; color: str
       return { label: 'Ambulance Unit', color: '#F59E0B', icon: 'car' };
     case 'blood_bank':
       return { label: 'Blood Bank', color: '#EF4444', icon: 'water' };
-    case 'responder':
-      return { label: 'Emergency Responder', color: '#DC2626', icon: 'flash' };
-    case 'admin':
-      return { label: 'System Admin', color: '#334155', icon: 'shield-checkmark' };
     default:
       return { label: 'User', color: '#64748B', icon: 'person' };
   }

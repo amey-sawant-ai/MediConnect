@@ -12,6 +12,7 @@ import { DashboardHeader } from '@/components/DashboardHeader';
 import { PatientProfileData } from '@/types/auth';
 import { HealthcareColors } from '@/constants/theme';
 import { InteractiveEmergencyMap } from '@/components/InteractiveEmergencyMap';
+import { NearbyHospitalsOSMMap } from '@/components/NearbyHospitalsOSMMap';
 
 export default function PatientDashboard() {
   const { user, profile } = useAuth();
@@ -207,9 +208,15 @@ export default function PatientDashboard() {
         {/* ================= VIEW 2: HOSPITALS ================= */}
         {activeTab === 'hospitals' && (
           <View style={styles.sectionArea}>
-            <Text style={styles.sectionTitle}>Live Hospital Bed & ICU Matrix</Text>
+            {/* Live OpenStreetMap Hospital Discovery & Routing */}
+            <NearbyHospitalsOSMMap
+              patientBloodGroup={patientProfile?.bloodGroup || 'O+'}
+              patientAllergies={patientProfile?.allergies || ['None reported']}
+            />
+
+            <Text style={styles.sectionTitle}>Regional Casualty & Trauma Matrix</Text>
             <Text style={styles.sectionSubtitle}>
-              Real-time available capacity reported directly by emergency casualty departments.
+              Emergency departments verified with dedicated ICU and ventilator resources.
             </Text>
 
             {hospitals.map((hosp) => (
@@ -323,7 +330,7 @@ export default function PatientDashboard() {
           <View style={styles.sectionArea}>
             <Text style={styles.sectionTitle}>Emergency Digital Medical Pass</Text>
             <Text style={styles.sectionSubtitle}>
-              Lock-screen ready medical credentials readable by first-responders and ER casualty staff.
+              Lock-screen ready medical credentials readable by paramedics and ER casualty staff.
             </Text>
 
             <View style={styles.qrCard}>
@@ -369,7 +376,7 @@ export default function PatientDashboard() {
               <View style={styles.offlineNotice}>
                 <Ionicons name="shield-checkmark" size={14} color="#059669" />
                 <Text style={styles.offlineNoticeText}>
-                  Encrypted & cached locally. First-responders can scan without cellular connection.
+                  Encrypted & cached locally. Paramedics can scan without cellular connection.
                 </Text>
               </View>
             </View>

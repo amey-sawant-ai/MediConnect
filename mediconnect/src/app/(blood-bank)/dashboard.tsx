@@ -11,6 +11,12 @@ import { useAuth } from '@/context/AuthContext';
 import { DashboardHeader } from '@/components/DashboardHeader';
 import { BloodBankProfileData } from '@/types/auth';
 import { HealthcareColors } from '@/constants/theme';
+import {
+  SYNTHEA_DONORS_DATASET,
+  SyntheaDonorRecord,
+  summonSyntheaDonor,
+} from '@/services/syntheaBloodService';
+import { BloodGroup } from '@/services/eRaktKoshService';
 
 export default function BloodBankDashboard() {
   const { user, profile } = useAuth();
@@ -30,6 +36,8 @@ export default function BloodBankDashboard() {
   );
 
   const [broadcastSent, setBroadcastSent] = useState(false);
+  const [selectedDonorFilter, setSelectedDonorFilter] = useState<BloodGroup | 'ALL'>('ALL');
+  const [summonedDonors, setSummonedDonors] = useState<Record<string, boolean>>({});
 
   const handleAdjust = (group: string, delta: number) => {
     setInventory((prev) => ({
@@ -41,6 +49,12 @@ export default function BloodBankDashboard() {
   const handleBroadcast = (bloodGroup: string) => {
     setBroadcastSent(true);
     alert(`Emergency broadcast transmitted for ${bloodGroup} to 142 registered donors within a 10km radius.`);
+  };
+
+  const handleSummon = (donor: SyntheaDonorRecord) => {
+    const res = summonSyntheaDonor(donor, user?.fullName || 'LifeLine Blood Bank', donor.bloodGroup);
+    setSummonedDonors((prev) => ({ ...prev, [donor.syntheaPatientId]: true }));
+    alert(res.message);
   };
 
   return (
@@ -135,6 +149,112 @@ export default function BloodBankDashboard() {
             onPress={() => handleBroadcast('O- / Rare Blood Types')}>
             <Text style={styles.broadcastActionBtnText}>Trigger Blast</Text>
           </TouchableOpacity>
+        </View>
+
+        {/* Synthea Synthetic Patient Population Donor Network */}
+        <View style={styles.syntheaHeaderRow}>
+          <View>
+            <Text style={styles.sectionTitle}>Synthea Verified Donor Registry</Text>
+            <Text style={styles.sectionSubtitle}>
+              Clinical observations: LOINC 718-7 (Hemoglobin) & LOINC 777-3 (Platelets)
+            </Text>
+          </View>
+          <View style={styles.syntheaBadge}>
+            <Text style={styles.syntheaBadgeText}>FHIR Standards</Text>
+          </View>
+        </View>
+
+        {/* Filter Pills */}
+        <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.donorFilterScroll}>
+          {['ALL', 'O-', 'O+', 'A+', 'A-', 'B+', 'B-', 'AB+', 'AB-'].map((grp) => (
+            <TouchableOpacity
+              key={grp}
+              style={[
+                styles.donorFilterPill,
+                selectedDonorFilter === grp && styles.donorFilterPillActive,
+              ]}
+              onPress={() => setSelectedDonorFilter(grp as any)}>
+              <Text
+                style={[
+                  styles.donorFilterPillText,
+                  selectedDonorFilter === grp && styles.donorFilterPillTextActive,
+                ]}>
+                {grp}
+              </Text>
+            </TouchableOpacity>
+          ))}
+        </ScrollView>
+
+        {/* Donor Cards List */}
+        <View style={styles.donorsList}>
+          {SYNTHEA_DONORS_DATASET.filter(
+            (d) => selectedDonorFilter === 'ALL' || d.bloodGroup === selectedDonorFilter
+          ).map((donor) => {
+            const isSummoned = summonedDonors[donor.syntheaPatientId];
+            return (
+              <View key={donor.syntheaPatientId} style={styles.donorCard}>
+                <View style={styles.donorTop}>
+                  <View style={styles.donorBloodBadge}>
+                    <Text style={styles.donorBloodText}>{donor.bloodGroup}</Text>
+                  </View>
+                  <View style={{ flex: 1 }}>
+                    <View style={styles.donorNameRow}>
+                      <Text style={styles.donorName}>{donor.fullName}</Text>
+                      <View style={styles.badgeLevelPill}>
+                        <Text style={styles.badgeLevelText}>{donor.badgeLevel}</Text>
+                      </View>
+                    </View>
+                    <Text style={styles.donorId}>
+                      Synthea ID: {donor.syntheaPatientId} • {donor.distanceKm} km away
+                    </Text>
+                  </View>
+                </View>
+
+                {/* LOINC Clinical Observations */}
+                <View style={styles.loincBox}>
+                  <View style={styles.loincItem}>
+                    <Text style={styles.loincLabel}>Hemoglobin (LOINC 718-7)</Text>
+                    <Text style={styles.loincVal}>{donor.loincObservations.hemoglobinGdl} g/dL</Text>
+                  </View>
+                  <View style={styles.loincDivider} />
+                  <View style={styles.loincItem}>
+                    <Text style={styles.loincLabel}>Platelets (LOINC 777-3)</Text>
+                    <Text style={styles.loincVal}>{donor.loincObservations.plateletCountK}k/µL</Text>
+                  </View>
+                  <View style={styles.loincDivider} />
+                  <View style={styles.loincItem}>
+                    <Text style={styles.loincLabel}>Status</Text>
+                    <Text style={[styles.loincVal, { color: donor.isEligibleNow ? '#059669' : '#DC2626' }]}>
+                      {donor.isEligibleNow ? 'Eligible' : 'Interval'}
+                    </Text>
+                  </View>
+                </View>
+
+                {/* Summon Button */}
+                <TouchableOpacity
+                  style={[
+                    styles.summonBtn,
+                    isSummoned && styles.summonBtnDone,
+                    !donor.isEligibleNow && styles.summonBtnDisabled,
+                  ]}
+                  onPress={() => handleSummon(donor)}
+                  disabled={isSummoned || !donor.isEligibleNow}>
+                  <Ionicons
+                    name={isSummoned ? 'checkmark-circle' : 'mail'}
+                    size={14}
+                    color="#FFFFFF"
+                  />
+                  <Text style={styles.summonBtnText}>
+                    {isSummoned
+                      ? 'SMS & App Summon Dispatched'
+                      : donor.isEligibleNow
+                      ? `Summon ${donor.fullName} via SMS`
+                      : donor.disqualificationReason || 'Currently Ineligible'}
+                  </Text>
+                </TouchableOpacity>
+              </View>
+            );
+          })}
         </View>
       </ScrollView>
     </View>
@@ -322,6 +442,155 @@ const styles = StyleSheet.create({
     borderRadius: 8,
   },
   broadcastActionBtnText: {
+    color: '#FFFFFF',
+    fontSize: 12,
+    fontWeight: '700',
+  },
+  syntheaHeaderRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginTop: 8,
+  },
+  syntheaBadge: {
+    backgroundColor: '#E0F2FE',
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 6,
+  },
+  syntheaBadgeText: {
+    fontSize: 10,
+    fontWeight: '800',
+    color: '#0284C7',
+  },
+  donorFilterScroll: {
+    flexDirection: 'row',
+    marginVertical: 4,
+  },
+  donorFilterPill: {
+    backgroundColor: '#FFFFFF',
+    borderWidth: 1,
+    borderColor: '#E2E8F0',
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 8,
+    marginRight: 6,
+  },
+  donorFilterPillActive: {
+    borderColor: '#DC2626',
+    backgroundColor: '#FEF2F2',
+  },
+  donorFilterPillText: {
+    fontSize: 12,
+    color: '#475569',
+    fontWeight: '600',
+  },
+  donorFilterPillTextActive: {
+    color: '#DC2626',
+    fontWeight: '800',
+  },
+  donorsList: {
+    gap: 10,
+    marginTop: 4,
+  },
+  donorCard: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: '#E2E8F0',
+    padding: 14,
+    gap: 10,
+  },
+  donorTop: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+  },
+  donorBloodBadge: {
+    width: 40,
+    height: 40,
+    borderRadius: 8,
+    backgroundColor: '#FEF2F2',
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 1,
+    borderColor: '#FECACA',
+  },
+  donorBloodText: {
+    fontSize: 15,
+    fontWeight: '900',
+    color: '#DC2626',
+  },
+  donorNameRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  donorName: {
+    fontSize: 14,
+    fontWeight: '700',
+    color: '#0F172A',
+  },
+  badgeLevelPill: {
+    backgroundColor: '#FEF3C7',
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: 4,
+  },
+  badgeLevelText: {
+    fontSize: 9,
+    fontWeight: '800',
+    color: '#D97706',
+  },
+  donorId: {
+    fontSize: 11,
+    color: '#64748B',
+    marginTop: 2,
+  },
+  loincBox: {
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+    backgroundColor: '#F8FAFC',
+    borderRadius: 8,
+    padding: 8,
+    borderWidth: 1,
+    borderColor: '#E2E8F0',
+  },
+  loincItem: {
+    alignItems: 'center',
+  },
+  loincLabel: {
+    fontSize: 9,
+    color: '#64748B',
+  },
+  loincVal: {
+    fontSize: 12,
+    fontWeight: '700',
+    color: '#0F172A',
+    marginTop: 2,
+  },
+  loincDivider: {
+    width: 1,
+    height: 20,
+    backgroundColor: '#CBD5E1',
+    alignSelf: 'center',
+  },
+  summonBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 6,
+    backgroundColor: HealthcareColors.emergencyRed,
+    paddingVertical: 10,
+    borderRadius: 8,
+  },
+  summonBtnDone: {
+    backgroundColor: '#059669',
+  },
+  summonBtnDisabled: {
+    backgroundColor: '#CBD5E1',
+  },
+  summonBtnText: {
     color: '#FFFFFF',
     fontSize: 12,
     fontWeight: '700',

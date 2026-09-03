@@ -24,7 +24,7 @@ export default function RoleOnboardingScreen() {
     password?: string;
   }>();
 
-  const selectedRole = (params.role as Exclude<UserRole, 'admin'>) || 'patient';
+  const selectedRole = (params.role as UserRole) || 'patient';
   const roleBadge = getRoleBadgeDetails(selectedRole);
   const { registerUser, isLoading } = useAuth();
   const [error, setError] = useState<string | null>(null);
@@ -85,15 +85,6 @@ export default function RoleOnboardingScreen() {
   const [bbHotline, setBbHotline] = useState('+91 22 2500 1122');
   const [bbAddress, setBbAddress] = useState('Health Complex, Central Hospital Rd');
   const [bbHours, setBbHours] = useState('24 Hours / 7 Days');
-
-  // -------------------------------------------------------------
-  // RESPONDER FIELDS
-  // -------------------------------------------------------------
-  const [respBadge, setRespBadge] = useState('EMT-P-77401');
-  const [respOrg, setRespOrg] = useState('Disaster Medical Assistance Team');
-  const [respRoleTitle, setRespRoleTitle] = useState('Advanced EMT');
-  const [respCerts, setRespCerts] = useState('ACLS, PHTLS, CPR Certified');
-  const [respContact, setRespContact] = useState('+91 97654 32100');
 
   const bloodGroupList = ['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-'];
 
@@ -196,16 +187,6 @@ export default function RoleOnboardingScreen() {
         plasmaAvailable: true,
         isVerified: false,
       };
-    } else if (selectedRole === 'responder') {
-      profileData = {
-        badgeOrResponderId: respBadge,
-        organizationName: respOrg,
-        responderRole: respRoleTitle,
-        certifications: respCerts.split(',').map((s) => s.trim()),
-        emergencyContactPhone: respContact,
-        isOnDuty: true,
-        isVerified: false,
-      };
     }
 
     const res = await registerUser(
@@ -249,7 +230,6 @@ export default function RoleOnboardingScreen() {
           {selectedRole === 'hospital' && 'Facility & Emergency Bed Capacities'}
           {selectedRole === 'ambulance' && 'Vehicle, Equipment & Crew Setup'}
           {selectedRole === 'blood_bank' && 'Facility License & Operating Details'}
-          {selectedRole === 'responder' && 'EMT Certification & Deployment Info'}
         </Text>
 
         <Text style={styles.subtitle}>
@@ -624,55 +604,6 @@ export default function RoleOnboardingScreen() {
                 style={styles.input}
                 value={bbHours}
                 onChangeText={setBbHours}
-              />
-            </View>
-          </View>
-        )}
-
-        {/* ----------------- RESPONDER FORM ----------------- */}
-        {selectedRole === 'responder' && (
-          <View style={styles.formSection}>
-            <View style={styles.inputGroup}>
-              <Text style={styles.label}>Badge / First Responder ID *</Text>
-              <TextInput
-                style={styles.input}
-                placeholder="EMT-XXXXX"
-                placeholderTextColor="#94A3B8"
-                value={respBadge}
-                onChangeText={setRespBadge}
-              />
-            </View>
-            <View style={styles.inputGroup}>
-              <Text style={styles.label}>Organization / Station</Text>
-              <TextInput
-                style={styles.input}
-                value={respOrg}
-                onChangeText={setRespOrg}
-              />
-            </View>
-            <View style={styles.inputGroup}>
-              <Text style={styles.label}>Responder Title / Role</Text>
-              <TextInput
-                style={styles.input}
-                value={respRoleTitle}
-                onChangeText={setRespRoleTitle}
-              />
-            </View>
-            <View style={styles.inputGroup}>
-              <Text style={styles.label}>Certifications</Text>
-              <TextInput
-                style={styles.input}
-                value={respCerts}
-                onChangeText={setRespCerts}
-              />
-            </View>
-            <View style={styles.inputGroup}>
-              <Text style={styles.label}>Duty Contact Phone</Text>
-              <TextInput
-                style={styles.input}
-                keyboardType="phone-pad"
-                value={respContact}
-                onChangeText={setRespContact}
               />
             </View>
           </View>

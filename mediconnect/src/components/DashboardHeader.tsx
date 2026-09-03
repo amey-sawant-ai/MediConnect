@@ -21,8 +21,6 @@ export const DashboardHeader: React.FC<{ title?: string }> = ({ title }) => {
     'hospital',
     'ambulance',
     'blood_bank',
-    'responder',
-    'admin',
   ];
 
   const handleSosTrigger = (type: string) => {

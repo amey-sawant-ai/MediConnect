@@ -15,7 +15,7 @@ import { getRoleBadgeDetails } from '@/utils/roleRedirect';
 
 export default function RegisterAccountScreen() {
   const params = useLocalSearchParams<{ role?: string }>();
-  const selectedRole = (params.role as Exclude<UserRole, 'admin'>) || 'patient';
+  const selectedRole = (params.role as UserRole) || 'patient';
   const roleBadge = getRoleBadgeDetails(selectedRole);
 
   const [fullName, setFullName] = useState('');

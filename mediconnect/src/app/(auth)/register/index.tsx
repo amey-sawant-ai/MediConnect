@@ -12,7 +12,7 @@ import { UserRole } from '@/types/auth';
 import { HealthcareColors } from '@/constants/theme';
 
 interface RoleOption {
-  id: Exclude<UserRole, 'admin'>;
+  id: UserRole;
   title: string;
   badge: string;
   description: string;
@@ -66,19 +66,10 @@ const PUBLIC_ROLES: RoleOption[] = [
     icon: 'water',
     themeColor: '#EF4444',
   },
-  {
-    id: 'responder',
-    title: 'Emergency Responder / EMT',
-    badge: 'Badge Verified',
-    description:
-      'On-scene triage, AED location beacons, rapid trauma stabilization, and emergency CPR assistance.',
-    icon: 'flash',
-    themeColor: '#DC2626',
-  },
 ];
 
 export default function SelectRoleScreen() {
-  const [selectedRole, setSelectedRole] = useState<Exclude<UserRole, 'admin'>>('patient');
+  const [selectedRole, setSelectedRole] = useState<UserRole>('patient');
 
   const handleContinue = () => {
     router.push({
@@ -105,12 +96,6 @@ export default function SelectRoleScreen() {
         <Text style={styles.subtitle}>
           HealthConnect delivers custom workflows and emergency controls tailored to your role.
         </Text>
-        <View style={styles.adminNotice}>
-          <Ionicons name="shield-checkmark" size={14} color="#64748B" />
-          <Text style={styles.adminNoticeText}>
-            Administrator accounts are provisioned internally and do not have public signup.
-          </Text>
-        </View>
       </View>
 
       <View style={styles.rolesGrid}>
@@ -235,20 +220,6 @@ const styles = StyleSheet.create({
     color: '#64748B',
     marginTop: 4,
     lineHeight: 18,
-  },
-  adminNotice: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-    marginTop: 10,
-    backgroundColor: '#F1F5F9',
-    padding: 8,
-    borderRadius: 6,
-  },
-  adminNoticeText: {
-    fontSize: 11,
-    color: '#64748B',
-    flex: 1,
   },
   rolesGrid: {
     gap: 12,
