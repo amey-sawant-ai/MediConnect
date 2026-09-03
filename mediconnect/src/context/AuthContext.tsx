@@ -5,6 +5,7 @@ import {
   UserRole,
   AnyRoleProfileData,
   BaseRegisterPayload,
+  PatientProfileData,
 } from '@/types/auth';
 import { MOCK_ACCOUNTS } from '@/data/mockUsers';
 import { getDashboardRoute } from '@/utils/roleRedirect';
@@ -30,6 +31,7 @@ interface AuthContextType {
   logout: () => Promise<void>;
   switchDemoRole: (role: UserRole) => void;
   triggerEmergencySos: (incidentType: string) => { success: boolean; dispatchId: string; etaMinutes: number };
+  resolvePatientByQrToken: (qrToken: string) => { user: User; profile: PatientProfileData } | null;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -186,6 +188,21 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     };
   };
 
+  const resolvePatientByQrToken = (_qrToken: string): { user: User; profile: PatientProfileData } | null => {
+    // If current active session is a patient, return live session data so any edits update dynamically
+    if (user && role === 'patient' && profile) {
+      return {
+        user,
+        profile: profile as PatientProfileData,
+      };
+    }
+    const patientAcc = MOCK_ACCOUNTS.patient;
+    return {
+      user: patientAcc.user,
+      profile: patientAcc.profile as PatientProfileData,
+    };
+  };
+
   return (
     <AuthContext.Provider
       value={{
@@ -202,6 +219,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         logout,
         switchDemoRole,
         triggerEmergencySos,
+        resolvePatientByQrToken,
       }}>
       {children}
     </AuthContext.Provider>

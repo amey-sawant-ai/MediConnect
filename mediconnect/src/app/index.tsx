@@ -1,8 +1,7 @@
 import React, { useEffect } from 'react';
-import { View, Text, StyleSheet, ActivityIndicator } from 'react-native';
+import { View, Text, StyleSheet, ActivityIndicator, Image } from 'react-native';
 import { router } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
-import { Ionicons } from '@expo/vector-icons';
 import { useAuth } from '@/context/AuthContext';
 import { getDashboardRoute } from '@/utils/roleRedirect';
 import { HealthcareColors } from '@/constants/theme';
@@ -29,10 +28,12 @@ export default function EntryIndexScreen() {
   return (
     <View style={styles.container}>
       <View style={styles.brandContainer}>
-        <View style={styles.logoBadge}>
-          <Ionicons name="medical" size={40} color="#FFFFFF" />
-        </View>
-        <Text style={styles.brandTitle}>HealthConnect</Text>
+        <Image
+          source={require('../../assets/images/app_logo.png')}
+          style={styles.logoBadge}
+          resizeMode="contain"
+        />
+        <Text style={styles.brandTitle}>MediConnect</Text>
         <Text style={styles.brandSubtitle}>Healthcare & Emergency Response</Text>
       </View>
       <ActivityIndicator size="large" color={HealthcareColors.emergencyRed} style={{ marginTop: 24 }} />

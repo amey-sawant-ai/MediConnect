@@ -5,8 +5,10 @@ import {
   StyleSheet,
   ScrollView,
   TouchableOpacity,
+  Modal,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import QRCode from 'react-native-qrcode-svg';
 import { useAuth } from '@/context/AuthContext';
 import { DashboardHeader } from '@/components/DashboardHeader';
 import { PatientProfileData } from '@/types/auth';
@@ -17,13 +19,22 @@ import QRCode from 'react-native-qrcode-svg';
 import { buildPatientQrPayload } from '@/services/qrCodeService';
 
 export default function PatientDashboard() {
-  const { user, profile } = useAuth();
+  const { user, profile, triggerEmergencySos } = useAuth();
   const patientProfile = profile as PatientProfileData | undefined;
 
   const [activeTab, setActiveTab] = useState<'home' | 'hospitals' | 'blood' | 'medical_pass'>('home');
   const [selectedBloodSearch, setSelectedBloodSearch] = useState<string>('O+');
   const [cprRunning, setCprRunning] = useState<boolean>(false);
   const [cprCount, setCprCount] = useState<number>(0);
+
+  const [sosModalVisible, setSosModalVisible] = useState<boolean>(false);
+  const [sosActiveData, setSosActiveData] = useState<{ dispatchId: string; eta: number; type: string } | null>(null);
+
+  const handleTriggerSos = (type: string = 'Critical Emergency Request') => {
+    const res = triggerEmergencySos(type);
+    setSosActiveData({ dispatchId: res.dispatchId, eta: res.etaMinutes, type });
+    setSosModalVisible(true);
+  };
 
   // Mock nearby hospitals
   const hospitals = [
@@ -121,6 +132,50 @@ export default function PatientDashboard() {
         {/* ================= VIEW 1: HOME OVERVIEW ================= */}
         {activeTab === 'home' && (
           <View style={styles.sectionArea}>
+            {/* BIG PROMINENT EMERGENCY SOS HERO CARD */}
+            <View style={styles.heroSosCard}>
+              <View style={styles.heroSosBadgeRow}>
+                <View style={styles.heroSosPulseDot} />
+                <Text style={styles.heroSosBadgeText}>24/7 IMMEDIATE EMERGENCY DISPATCH</Text>
+              </View>
+
+              <Text style={styles.heroSosTitle}>EMERGENCY SOS</Text>
+              <Text style={styles.heroSosDesc}>
+                Press the big button below for instant 1-tap emergency dispatch & alert
+              </Text>
+
+              {/* GIANT CENTERED SOS BUTTON */}
+              <TouchableOpacity
+                style={styles.heroSosButtonOuter}
+                activeOpacity={0.8}
+                onPress={() => handleTriggerSos('Critical Life Emergency')}>
+                <View style={styles.heroSosButtonInner}>
+                  <Ionicons name="alert-circle" size={46} color="#FFFFFF" />
+                  <Text style={styles.heroSosButtonText}>SOS</Text>
+                  <Text style={styles.heroSosButtonSub}>TAP FOR HELP</Text>
+                </View>
+              </TouchableOpacity>
+
+              {/* QUICK TRIAGE SELECTORS */}
+              <Text style={styles.quickSosLabel}>Quick Emergency Triggers:</Text>
+              <View style={styles.quickSosGrid}>
+                {[
+                  { label: 'Cardiac Arrest / Chest Pain', icon: 'heart' },
+                  { label: 'Road Accident / Trauma', icon: 'car-sport' },
+                  { label: 'Severe Breathing Trouble', icon: 'fitness' },
+                  { label: 'Unconscious / Stroke', icon: 'medical' },
+                ].map((item) => (
+                  <TouchableOpacity
+                    key={item.label}
+                    style={styles.quickSosChip}
+                    onPress={() => handleTriggerSos(item.label)}>
+                    <Ionicons name={item.icon as any} size={14} color="#DC2626" />
+                    <Text style={styles.quickSosChipText}>{item.label}</Text>
+                  </TouchableOpacity>
+                ))}
+              </View>
+            </View>
+
             {/* Vital Emergency Card */}
             <View style={styles.vitalsBanner}>
               <View style={styles.vitalsHeader}>
@@ -345,9 +400,10 @@ export default function PatientDashboard() {
         {/* ================= VIEW 4: MEDICAL QR PASS ================= */}
         {activeTab === 'medical_pass' && (
           <View style={styles.sectionArea}>
-            <Text style={styles.sectionTitle}>Emergency Digital Medical Pass</Text>
+            <Text style={styles.sectionTitle}>Permanent Digital Medical Pass</Text>
             <Text style={styles.sectionSubtitle}>
               Lock-screen ready medical credentials readable by paramedics and ER casualty staff.
+              Your unique QR pass automatically resolves your live updated emergency profile when scanned.
             </Text>
 
             <View style={styles.qrCard}>
@@ -366,6 +422,7 @@ export default function PatientDashboard() {
                 )}
                 <Text style={styles.qrTokenText}>
                   UNIQUE PASS TOKEN: {patientProfile?.qrPassToken || 'QR-MED-98765-ALPHA'}
+                  UNIQUE PASS TOKEN: {patientProfile?.qrPassToken || 'qr_med_rahul_98765'}
                 </Text>
               </View>
 
@@ -373,6 +430,7 @@ export default function PatientDashboard() {
                 <Ionicons name="infinite" size={18} color="#0284C7" />
                 <Text style={styles.uniqueQrNoticeText}>
                   <Text style={{ fontWeight: '800' }}>Single Persistent QR Pass:</Text> Even if you update your phone number, emergency contacts, or allergies in your profile, this exact same QR code will always display your <Text style={{ fontWeight: '800' }}>latest live records</Text> to doctors and paramedics.
+                  <Text style={{ fontWeight: '800' }}>Single Persistent QR Pass:</Text> Even if you update your phone number, emergency contacts, or allergies in your profile, this exact same QR code will always display your <Text style={{ fontWeight: '800' }}>latest live records</Text> to doctors and first-responders.
                 </Text>
               </View>
 
@@ -418,6 +476,59 @@ export default function PatientDashboard() {
           </View>
         )}
       </ScrollView>
+
+      {/* EMERGENCY DISPATCH MODAL */}
+      <Modal
+        visible={sosModalVisible}
+        transparent
+        animationType="slide"
+        onRequestClose={() => {
+          setSosModalVisible(false);
+          setSosActiveData(null);
+        }}>
+        <View style={styles.modalBackdrop}>
+          <View style={styles.sosCard}>
+            <View style={styles.sosHeader}>
+              <Ionicons name="warning" size={36} color="#DC2626" />
+              <Text style={styles.sosCardTitle}>Emergency SOS Transmitted</Text>
+              <Text style={styles.sosCardDesc}>
+                Target Category: <Text style={{ fontWeight: '700', color: '#DC2626' }}>{sosActiveData?.type}</Text>
+              </Text>
+            </View>
+
+            <View style={styles.sosSuccessBox}>
+              <View style={styles.sosBeacon}>
+                <Ionicons name="radio" size={44} color="#10B981" />
+                <Text style={styles.sosSuccessTitle}>Ambulance & ER Alerted!</Text>
+              </View>
+              <View style={styles.sosMetricRow}>
+                <View style={styles.sosMetric}>
+                  <Text style={styles.sosMetricLabel}>Dispatch ID</Text>
+                  <Text style={styles.sosMetricValue}>{sosActiveData?.dispatchId}</Text>
+                </View>
+                <View style={styles.sosMetric}>
+                  <Text style={styles.sosMetricLabel}>Estimated ETA</Text>
+                  <Text style={[styles.sosMetricValue, { color: '#DC2626' }]}>
+                    {sosActiveData?.eta} mins
+                  </Text>
+                </View>
+              </View>
+              <Text style={styles.sosSuccessNote}>
+                GPS live stream established with central trauma command.
+              </Text>
+            </View>
+
+            <TouchableOpacity
+              style={styles.closeSosButton}
+              onPress={() => {
+                setSosModalVisible(false);
+                setSosActiveData(null);
+              }}>
+              <Text style={styles.closeSosText}>Acknowledge & Close</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
     </View>
   );
 }
@@ -914,5 +1025,234 @@ const styles = StyleSheet.create({
     fontSize: 11,
     color: '#065F46',
     flex: 1,
+  },
+  // Hero SOS Card Styles (Bigger & Center of Attention)
+  heroSosCard: {
+    backgroundColor: '#FFF5F5',
+    borderWidth: 2,
+    borderColor: '#FECACA',
+    borderRadius: 20,
+    padding: 20,
+    alignItems: 'center',
+    shadowColor: '#DC2626',
+    shadowOpacity: 0.12,
+    shadowRadius: 16,
+    elevation: 4,
+    marginBottom: 6,
+  },
+  heroSosBadgeRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    backgroundColor: '#FEE2E2',
+    paddingHorizontal: 12,
+    paddingVertical: 5,
+    borderRadius: 20,
+    marginBottom: 10,
+  },
+  heroSosPulseDot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    backgroundColor: '#DC2626',
+  },
+  heroSosBadgeText: {
+    fontSize: 11,
+    fontWeight: '800',
+    color: '#991B1B',
+    letterSpacing: 0.5,
+  },
+  heroSosTitle: {
+    fontSize: 22,
+    fontWeight: '900',
+    color: '#991B1B',
+    letterSpacing: 1,
+  },
+  heroSosDesc: {
+    fontSize: 12,
+    color: '#64748B',
+    textAlign: 'center',
+    marginTop: 4,
+    paddingHorizontal: 10,
+  },
+  heroSosButtonOuter: {
+    width: 140,
+    height: 140,
+    borderRadius: 70,
+    backgroundColor: 'rgba(220, 38, 38, 0.15)',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginVertical: 18,
+    borderWidth: 3,
+    borderColor: 'rgba(220, 38, 38, 0.25)',
+  },
+  heroSosButtonInner: {
+    width: 118,
+    height: 118,
+    borderRadius: 59,
+    backgroundColor: '#DC2626',
+    alignItems: 'center',
+    justifyContent: 'center',
+    shadowColor: '#DC2626',
+    shadowOpacity: 0.5,
+    shadowRadius: 14,
+    elevation: 8,
+  },
+  heroSosButtonText: {
+    color: '#FFFFFF',
+    fontSize: 28,
+    fontWeight: '900',
+    letterSpacing: 2,
+    marginTop: -2,
+  },
+  heroSosButtonSub: {
+    color: 'rgba(255, 255, 255, 0.95)',
+    fontSize: 9,
+    fontWeight: '800',
+    letterSpacing: 0.5,
+    marginTop: 1,
+  },
+  quickSosLabel: {
+    fontSize: 12,
+    fontWeight: '700',
+    color: '#475569',
+    marginBottom: 8,
+  },
+  quickSosGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    justifyContent: 'center',
+    gap: 8,
+    width: '100%',
+  },
+  quickSosChip: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    backgroundColor: '#FFFFFF',
+    borderWidth: 1,
+    borderColor: '#FECACA',
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: 20,
+    elevation: 1,
+  },
+  quickSosChipText: {
+    fontSize: 12,
+    fontWeight: '700',
+    color: '#991B1B',
+  },
+  // Modal Backdrop & SOS Card
+  modalBackdrop: {
+    flex: 1,
+    backgroundColor: 'rgba(15, 23, 42, 0.65)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 16,
+  },
+  sosCard: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: 20,
+    width: '100%',
+    maxWidth: 440,
+    padding: 22,
+    alignItems: 'center',
+    shadowColor: '#000',
+    shadowOpacity: 0.2,
+    shadowRadius: 20,
+    elevation: 10,
+  },
+  sosHeader: {
+    alignItems: 'center',
+    marginBottom: 16,
+  },
+  sosCardTitle: {
+    fontSize: 20,
+    fontWeight: '800',
+    color: '#DC2626',
+    marginTop: 8,
+  },
+  sosCardDesc: {
+    fontSize: 13,
+    color: '#64748B',
+    textAlign: 'center',
+    marginTop: 4,
+  },
+  sosSuccessBox: {
+    width: '100%',
+    backgroundColor: '#ECFDF5',
+    borderColor: '#A7F3D0',
+    borderWidth: 1,
+    borderRadius: 14,
+    padding: 16,
+    alignItems: 'center',
+    marginBottom: 16,
+  },
+  sosBeacon: {
+    alignItems: 'center',
+    marginBottom: 10,
+  },
+  sosSuccessTitle: {
+    fontSize: 18,
+    fontWeight: '800',
+    color: '#065F46',
+    marginTop: 6,
+  },
+  sosMetricRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+    width: '100%',
+    marginVertical: 10,
+    paddingVertical: 10,
+    borderTopWidth: 1,
+    borderBottomWidth: 1,
+    borderColor: '#D1FAE5',
+  },
+  sosMetric: {
+    alignItems: 'center',
+  },
+  sosMetricLabel: {
+    fontSize: 11,
+    color: '#047857',
+  },
+  sosMetricValue: {
+    fontSize: 16,
+    fontWeight: '700',
+    color: '#065F46',
+    marginTop: 2,
+  },
+  sosSuccessNote: {
+    fontSize: 11,
+    color: '#047857',
+    textAlign: 'center',
+  },
+  closeSosButton: {
+    width: '100%',
+    backgroundColor: '#F1F5F9',
+    paddingVertical: 12,
+    borderRadius: 10,
+    alignItems: 'center',
+  },
+  closeSosText: {
+    fontSize: 14,
+    fontWeight: '700',
+    color: '#475569',
+  },
+  uniqueQrNoticeBox: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    gap: 10,
+    backgroundColor: '#F0F9FF',
+    borderColor: '#BAE6FD',
+    borderWidth: 1,
+    padding: 12,
+    borderRadius: 12,
+    width: '100%',
+  },
+  uniqueQrNoticeText: {
+    fontSize: 12,
+    color: '#0369A1',
+    flex: 1,
+    lineHeight: 18,
   },
 });
