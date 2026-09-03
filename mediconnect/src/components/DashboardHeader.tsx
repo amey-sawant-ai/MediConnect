@@ -7,23 +7,13 @@ import { getRoleBadgeDetails } from '@/utils/roleRedirect';
 import { HealthcareColors } from '@/constants/theme';
 
 export const DashboardHeader: React.FC<{ title?: string }> = ({ title }) => {
-  const { user, role, logout, switchDemoRole, triggerEmergencySos } = useAuth();
-  const [roleModalVisible, setRoleModalVisible] = useState(false);
+  const { user, role, logout, triggerEmergencySos } = useAuth();
   const [sosModalVisible, setSosModalVisible] = useState(false);
   const [sosActiveData, setSosActiveData] = useState<{ dispatchId: string; eta: number } | null>(null);
 
   if (!user || !role) return null;
 
   const roleBadge = getRoleBadgeDetails(role);
-  const rolesList: UserRole[] = [
-    'patient',
-    'doctor',
-    'hospital',
-    'ambulance',
-    'blood_bank',
-    'responder',
-    'admin',
-  ];
 
   const handleSosTrigger = (type: string) => {
     const res = triggerEmergencySos(type);
@@ -53,17 +43,13 @@ export const DashboardHeader: React.FC<{ title?: string }> = ({ title }) => {
             <Text style={styles.sosText}>SOS</Text>
           </TouchableOpacity>
 
-          {/* Quick Role Switcher Button */}
-          <TouchableOpacity
-            style={[styles.roleButton, { borderColor: roleBadge.color }]}
-            onPress={() => setRoleModalVisible(true)}
-            activeOpacity={0.8}>
+          {/* Static Active Role Badge */}
+          <View style={[styles.roleBadge, { borderColor: roleBadge.color, backgroundColor: roleBadge.color + '10' }]}>
             <Ionicons name={roleBadge.icon as any} size={14} color={roleBadge.color} />
-            <Text style={[styles.roleButtonText, { color: roleBadge.color }]}>
+            <Text style={[styles.roleBadgeText, { color: roleBadge.color }]}>
               {roleBadge.label}
             </Text>
-            <Ionicons name="chevron-down" size={12} color={roleBadge.color} />
-          </TouchableOpacity>
+          </View>
 
           {/* Logout */}
           <TouchableOpacity
@@ -83,59 +69,6 @@ export const DashboardHeader: React.FC<{ title?: string }> = ({ title }) => {
           </Text>
         </View>
       )}
-
-      {/* Role Switcher Modal */}
-      <Modal
-        visible={roleModalVisible}
-        transparent
-        animationType="fade"
-        onRequestClose={() => setRoleModalVisible(false)}>
-        <View style={styles.modalBackdrop}>
-          <View style={styles.modalCard}>
-            <View style={styles.modalHeader}>
-              <View>
-                <Text style={styles.modalTitle}>Switch Dashboard View</Text>
-                <Text style={styles.modalSubtitle}>Preview experience across all 7 user roles</Text>
-              </View>
-              <TouchableOpacity onPress={() => setRoleModalVisible(false)}>
-                <Ionicons name="close-circle" size={24} color="#64748B" />
-              </TouchableOpacity>
-            </View>
-
-            <ScrollView style={styles.rolesList}>
-              {rolesList.map((r) => {
-                const info = getRoleBadgeDetails(r);
-                const isSelected = r === role;
-                return (
-                  <TouchableOpacity
-                    key={r}
-                    style={[
-                      styles.roleItem,
-                      isSelected && { borderColor: info.color, backgroundColor: '#F8FAFC' },
-                    ]}
-                    onPress={() => {
-                      setRoleModalVisible(false);
-                      switchDemoRole(r);
-                    }}>
-                    <View style={[styles.roleItemIcon, { backgroundColor: info.color + '15' }]}>
-                      <Ionicons name={info.icon as any} size={18} color={info.color} />
-                    </View>
-                    <View style={{ flex: 1 }}>
-                      <Text style={styles.roleItemTitle}>{info.label}</Text>
-                      <Text style={styles.roleItemDesc}>
-                        View {info.label.toLowerCase()} portal & controls
-                      </Text>
-                    </View>
-                    {isSelected && (
-                      <Ionicons name="checkmark-circle" size={20} color={info.color} />
-                    )}
-                  </TouchableOpacity>
-                );
-              })}
-            </ScrollView>
-          </View>
-        </View>
-      </Modal>
 
       {/* Emergency SOS Modal */}
       <Modal
@@ -270,19 +203,18 @@ const styles = StyleSheet.create({
     fontSize: 12,
     fontWeight: '700',
   },
-  roleButton: {
+  roleBadge: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 4,
-    borderWidth: 1.5,
+    gap: 5,
+    borderWidth: 1,
     paddingHorizontal: 10,
     paddingVertical: 5,
-    borderRadius: 6,
-    backgroundColor: '#FFFFFF',
+    borderRadius: 8,
   },
-  roleButtonText: {
+  roleBadgeText: {
     fontSize: 12,
-    fontWeight: '600',
+    fontWeight: '700',
   },
   logoutButton: {
     padding: 6,
